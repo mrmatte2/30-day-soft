@@ -29,6 +29,12 @@ export function isDayComplete(entry: Record<RuleKey, boolean>): boolean {
   return RULE_KEYS.every((key) => entry[key] === true)
 }
 
+/** How many days back you're allowed to backfill a missed entry. No forward logging. */
+export const MAX_BACKFILL_DAYS = 5
+
+/** Litres of water needed for the water rule to count as complete. */
+export const WATER_TARGET_LITRES = 3
+
 // --- Points / streak multiplier -------------------------------------------
 
 /** Base points awarded for a single completed day, before the streak multiplier. */

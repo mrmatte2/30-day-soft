@@ -3,6 +3,7 @@ import { RULE_KEYS, type RuleKey, isDayComplete, pointsForDay, MONEY_SAVED_PER_D
 export interface DailyEntry extends Record<RuleKey, boolean> {
   entry_date: string // 'YYYY-MM-DD'
   notes?: string | null
+  water_litres?: number
 }
 
 export interface StreakStats {

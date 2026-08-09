@@ -222,9 +222,41 @@ textarea {
   margin-bottom: 16px;
 }
 
+.day-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.day-nav h1 {
+  margin: 0;
+  min-width: 0;
+}
+
+.day-nav-arrow {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-nav-arrow:disabled {
+  opacity: 0.35;
+}
+
 .today-greeting {
   color: var(--text);
   margin-top: 4px;
+  text-align: center;
 }
 
 .today-status {
@@ -271,6 +303,11 @@ textarea {
   background: var(--success-bg);
 }
 
+.checklist-item.partial {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
 .checklist-emoji {
   font-size: 20px;
 }
@@ -287,6 +324,20 @@ textarea {
   color: var(--success);
   width: 20px;
   text-align: center;
+}
+
+.checklist-water-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.checklist-item.checked .checklist-water-count {
+  color: var(--success);
+}
+
+.checklist-item.partial .checklist-water-count {
+  color: var(--accent);
 }
 
 .notes-field {
