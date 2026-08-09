@@ -12,6 +12,7 @@ const emptyRuleState: RuleState = {
   water: false,
   no_alcohol: false,
   no_eating_out: false,
+  reading: false,
 }
 
 export default function TodayPage() {
@@ -33,7 +34,7 @@ export default function TodayPage() {
       setLoading(true)
       const { data, error } = await supabase
         .from('daily_entries')
-        .select('entry_date, workout, water, no_alcohol, no_eating_out, notes')
+        .select('entry_date, workout, water, no_alcohol, no_eating_out, reading, notes')
         .eq('user_id', profile!.id)
         .order('entry_date', { ascending: true })
 
@@ -50,6 +51,7 @@ export default function TodayPage() {
             water: todayEntry.water,
             no_alcohol: todayEntry.no_alcohol,
             no_eating_out: todayEntry.no_eating_out,
+            reading: todayEntry.reading,
           })
           setNotes(todayEntry.notes ?? '')
         }

@@ -17,9 +17,10 @@ export const RULES = [
   { key: 'water', label: 'Water (3 litres)', emoji: '💧' },
   { key: 'no_alcohol', label: 'No alcohol (unless social)', emoji: '🚫🍷' },
   { key: 'no_eating_out', label: 'No eating out', emoji: '🍳' },
+  { key: 'reading', label: 'Read 10-20 pages', emoji: '📖' },
 ] as const satisfies readonly RuleDef[]
 
-export type RuleKey = 'workout' | 'water' | 'no_alcohol' | 'no_eating_out'
+export type RuleKey = 'workout' | 'water' | 'no_alcohol' | 'no_eating_out' | 'reading'
 
 export const RULE_KEYS = RULES.map((r) => r.key) as RuleKey[]
 

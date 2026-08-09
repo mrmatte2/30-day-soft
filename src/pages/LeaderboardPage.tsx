@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
         supabase.from('profiles').select('id, name, created_at'),
         supabase
           .from('daily_entries')
-          .select('user_id, entry_date, workout, water, no_alcohol, no_eating_out, notes'),
+          .select('user_id, entry_date, workout, water, no_alcohol, no_eating_out, reading, notes'),
       ])
 
       if (cancelled) return
