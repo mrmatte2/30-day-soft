@@ -59,8 +59,8 @@ Everything about the daily rules, streak multiplier, and "money saved" amount li
   rule is a boolean column.
 - `getStreakMultiplier(streakLength)` — how many points a completed day is worth as your streak grows
   (defaults: 1x for streak < 5, 2x for 5-9, 3x for 10+). Edit the `thresholds` array to tune.
-- `MONEY_SAVED_PER_DAY` — dollars added to the running "money saved" stat for each day
-  `no_eating_out` is checked (defaults to $15).
+- `MONEY_SAVED_PER_DAY` / `MONEY_CURRENCY_LABEL` — amount and currency label added to the running
+  "money saved" stat for each day `no_eating_out` is checked (defaults to 150 kr).
 
 Streak/points math itself (consecutive-day logic, longest streak, completion %) lives in
 [`src/lib/streaks.ts`](src/lib/streaks.ts) and shouldn't need to change when you tune the numbers above.

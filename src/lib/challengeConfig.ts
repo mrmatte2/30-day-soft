@@ -13,9 +13,9 @@ export interface RuleDef {
 }
 
 export const RULES = [
-  { key: 'workout', label: 'Workout', emoji: '💪' },
-  { key: 'water', label: 'Water', emoji: '💧' },
-  { key: 'no_alcohol', label: 'No alcohol', emoji: '🚫🍷' },
+  { key: 'workout', label: 'Workout (30 minutes)', emoji: '💪' },
+  { key: 'water', label: 'Water (3 litres)', emoji: '💧' },
+  { key: 'no_alcohol', label: 'No alcohol (unless social)', emoji: '🚫🍷' },
   { key: 'no_eating_out', label: 'No eating out', emoji: '🍳' },
 ] as const satisfies readonly RuleDef[]
 
@@ -55,5 +55,8 @@ export function pointsForDay(streakLength: number): number {
 
 // --- "Money saved" stat -----------------------------------------------------
 
-/** Dollars "saved" for each day no_eating_out is checked true. */
-export const MONEY_SAVED_PER_DAY = 15
+/** Kronor "saved" for each day no_eating_out is checked true. */
+export const MONEY_SAVED_PER_DAY = 150
+
+/** Currency suffix shown after the amount, e.g. "150 kr". */
+export const MONEY_CURRENCY_LABEL = 'kr'

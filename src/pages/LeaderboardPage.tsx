@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { computeStreakStats, type DailyEntry, type StreakStats } from '../lib/streaks'
+import { MONEY_CURRENCY_LABEL } from '../lib/challengeConfig'
 import type { Profile } from '../types'
 
 interface LeaderboardRow {
@@ -87,7 +88,7 @@ export default function LeaderboardPage() {
             </div>
             <div className="leaderboard-extra">
               <span>{stats.totalPoints} pts</span>
-              <span>${stats.moneySaved} saved</span>
+              <span>{stats.moneySaved} {MONEY_CURRENCY_LABEL} saved</span>
             </div>
           </li>
         ))}

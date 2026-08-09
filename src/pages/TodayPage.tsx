@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
-import { RULES, type RuleKey, isDayComplete, pointsForDay } from '../lib/challengeConfig'
+import { RULES, type RuleKey, isDayComplete, pointsForDay, MONEY_CURRENCY_LABEL } from '../lib/challengeConfig'
 import { computeStreakStats, type DailyEntry } from '../lib/streaks'
 import { todayLocalISO, formatDisplayDate } from '../lib/date'
 
@@ -155,7 +155,7 @@ export default function TodayPage() {
           <span className="stat-label">Longest streak</span>
         </div>
         <div className="stat-card">
-          <span className="stat-value">${stats.moneySaved}</span>
+          <span className="stat-value">{stats.moneySaved} {MONEY_CURRENCY_LABEL}</span>
           <span className="stat-label">Money saved</span>
         </div>
       </div>
