@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { signInWithPasscode, signUpWithPasscode } from '../lib/auth'
+import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
+  const { refreshProfile } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [name, setName] = useState('')
   const [passcode, setPasscode] = useState('')
@@ -17,6 +19,9 @@ export default function LoginPage() {
         await signInWithPasscode(name, passcode)
       } else {
         await signUpWithPasscode(name, passcode)
+        // The profiles insert (inside signUpWithPasscode) finishes after the auth
+        // listener's own profile fetch already fired, so force a fresh one now.
+        await refreshProfile()
       }
       // AuthContext's onAuthStateChange listener picks up the new session and redirects.
     } catch (err) {

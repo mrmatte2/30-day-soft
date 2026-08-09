@@ -73,6 +73,9 @@ textarea {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  border-inline: 1px solid var(--border);
 }
 
 .app-shell {
@@ -108,6 +111,10 @@ textarea {
   gap: 4px;
   position: sticky;
   bottom: 0;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .nav-link {
@@ -143,8 +150,12 @@ textarea {
 
 /* Login */
 .login-page {
-  padding-top: 15dvh;
+  padding: 15dvh 16px 0;
   text-align: center;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .login-subtitle {

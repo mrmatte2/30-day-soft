@@ -18,8 +18,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-    setProfile(data ?? null)
+    // Right after signup, the profiles insert can land a beat after this fires
+    // (auth state updates as soon as the session exists, before our own insert
+    // finishes) - retry briefly instead of giving up and getting stuck on null.
+    const delays = [0, 400, 800, 1600]
+    for (const delay of delays) {
+      if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay))
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+      if (data) {
+        setProfile(data)
+        return
+      }
+    }
+    setProfile(null)
   }
 
   useEffect(() => {
