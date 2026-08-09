@@ -29,6 +29,20 @@ export function isDayComplete(entry: Record<RuleKey, boolean>): boolean {
   return RULE_KEYS.every((key) => entry[key] === true)
 }
 
+/**
+ * True if nothing was actually logged for this day - every rule is unchecked, no partial
+ * water, no notes. A row can still exist in the DB in this state (e.g. someone tapped a
+ * rule by accident and immediately undid it) - those rows shouldn't count as "logged".
+ */
+export function isEntryEmpty(
+  entry: Record<RuleKey, boolean> & { notes?: string | null; water_litres?: number },
+): boolean {
+  const hasAnyRuleChecked = RULE_KEYS.some((key) => entry[key] === true)
+  const hasPartialWater = (entry.water_litres ?? 0) > 0
+  const hasNotes = !!entry.notes && entry.notes.trim() !== ''
+  return !hasAnyRuleChecked && !hasPartialWater && !hasNotes
+}
+
 /** How many days back you're allowed to backfill a missed entry. No forward logging. */
 export const MAX_BACKFILL_DAYS = 5
 

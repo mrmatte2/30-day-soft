@@ -1,4 +1,4 @@
-import { RULE_KEYS, type RuleKey, isDayComplete, pointsForDay, MONEY_SAVED_PER_DAY } from './challengeConfig'
+import { RULE_KEYS, type RuleKey, isDayComplete, isEntryEmpty, pointsForDay, MONEY_SAVED_PER_DAY } from './challengeConfig'
 
 export interface DailyEntry extends Record<RuleKey, boolean> {
   entry_date: string // 'YYYY-MM-DD'
@@ -37,7 +37,9 @@ function todayUTC(): Date {
  * `entries` does not need to be sorted or contiguous - missing dates count as incomplete days.
  */
 export function computeStreakStats(entries: DailyEntry[]): StreakStats {
-  const sorted = [...entries].sort((a, b) => a.entry_date.localeCompare(b.entry_date))
+  const sorted = entries
+    .filter((e) => !isEntryEmpty(e))
+    .sort((a, b) => a.entry_date.localeCompare(b.entry_date))
 
   let longestStreak = 0
   let runningStreak = 0
