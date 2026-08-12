@@ -87,7 +87,7 @@ textarea {
 .app-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+  padding: calc(20px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
   max-width: 480px;
   width: 100%;
   margin: 0 auto;
