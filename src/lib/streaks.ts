@@ -1,4 +1,5 @@
 import { RULE_KEYS, type RuleKey, isDayComplete, isEntryEmpty, pointsForDay, MONEY_SAVED_PER_DAY } from './challengeConfig'
+import { todayLocalISO } from './date'
 
 export interface DailyEntry extends Record<RuleKey, boolean> {
   entry_date: string // 'YYYY-MM-DD'
@@ -48,6 +49,7 @@ export function computeStreakStats(entries: DailyEntry[]): StreakStats {
   let moneySaved = 0
   let prevDate: Date | null = null
   let lastCompletedDate: Date | null = null
+  const todayIso = todayLocalISO()
 
   for (const entry of sorted) {
     const date = toDateOnly(entry.entry_date)
@@ -64,7 +66,9 @@ export function computeStreakStats(entries: DailyEntry[]): StreakStats {
       totalPoints += pointsForDay(runningStreak)
       longestStreak = Math.max(longestStreak, runningStreak)
       lastCompletedDate = date
-    } else {
+    } else if (entry.entry_date !== todayIso) {
+      // A past day that wasn't finished genuinely breaks the streak. Today doesn't -
+      // it's still in progress, so the streak they're actively protecting stays visible.
       runningStreak = 0
     }
 
