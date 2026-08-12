@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "WebWorker"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src/sw.ts"]
+}

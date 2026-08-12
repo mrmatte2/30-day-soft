@@ -12,6 +12,12 @@ import {
 } from '../lib/challengeConfig'
 import { computeStreakStats, type DailyEntry } from '../lib/streaks'
 import { todayLocalISO, formatDisplayDate, shiftDateISO } from '../lib/date'
+import {
+  getPushPermissionState,
+  hasActivePushSubscription,
+  subscribeToPush,
+  type PushPermissionState,
+} from '../lib/push'
 
 type RuleState = Record<RuleKey, boolean>
 
@@ -42,6 +48,32 @@ export default function TodayPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [pushState, setPushState] = useState<PushPermissionState>('unsupported')
+  const [pushSubscribed, setPushSubscribed] = useState<boolean | null>(null)
+  const [pushError, setPushError] = useState<string | null>(null)
+  const [subscribing, setSubscribing] = useState(false)
+
+  useEffect(() => {
+    setPushState(getPushPermissionState())
+    hasActivePushSubscription().then(setPushSubscribed)
+  }, [])
+
+  async function handleEnableNotifications() {
+    if (!profile) return
+    setSubscribing(true)
+    setPushError(null)
+    try {
+      await subscribeToPush(profile.id)
+      setPushSubscribed(true)
+    } catch (err) {
+      setPushError(err instanceof Error ? err.message : 'Could not enable notifications')
+    }
+    setPushState(getPushPermissionState())
+    setSubscribing(false)
+  }
+
+  const showNotifyBanner = pushSubscribed === false && pushState !== 'denied' && pushState !== 'unsupported'
 
   // Fetch the user's full history once - date navigation below is then instant/local.
   useEffect(() => {
@@ -179,6 +211,16 @@ export default function TodayPage() {
           <p className="today-greeting">Backfilling a missed day</p>
         )}
       </header>
+
+      {showNotifyBanner && (
+        <div className="notify-banner">
+          <span>Get notified when the others finish a workout or complete their day.</span>
+          <button type="button" onClick={handleEnableNotifications} disabled={subscribing}>
+            {subscribing ? 'Enabling…' : '🔔 Enable notifications'}
+          </button>
+        </div>
+      )}
+      {pushError && <p className="form-error">{pushError}</p>}
 
       <div className={dayComplete ? 'today-status complete' : 'today-status'}>
         {dayComplete ? `All done! +${projectedPoints} pts` : 'Not done yet'}
