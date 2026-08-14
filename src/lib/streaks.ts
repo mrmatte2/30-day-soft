@@ -3,8 +3,8 @@ import { todayLocalISO } from './date'
 
 export interface DailyEntry extends Record<RuleKey, boolean> {
   entry_date: string // 'YYYY-MM-DD'
-  notes?: string | null
   water_litres?: number
+  fast_food_only?: boolean
 }
 
 export interface StreakStats {
@@ -53,9 +53,9 @@ export function computeStreakStats(entries: DailyEntry[]): StreakStats {
 
   for (const entry of sorted) {
     const date = toDateOnly(entry.entry_date)
-    const complete = isDayComplete(entry)
+    const complete = isDayComplete(entry, entry.entry_date)
 
-    if (entry.no_eating_out) {
+    if (entry.no_eating_out && !entry.fast_food_only) {
       moneySaved += MONEY_SAVED_PER_DAY
     }
 

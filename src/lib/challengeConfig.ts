@@ -6,6 +6,8 @@
  * in supabase/migrations/0001_init.sql (and run a follow-up migration on the DB).
  */
 
+import { isWeekend } from './date'
+
 export interface RuleDef {
   key: RuleKey
   label: string
@@ -16,7 +18,7 @@ export const RULES = [
   { key: 'workout', label: 'Workout (30 minutes)', emoji: '💪' },
   { key: 'water', label: 'Water (3 litres)', emoji: '💧' },
   { key: 'no_alcohol', label: 'No alcohol (unless social)', emoji: '🚫🍷' },
-  { key: 'no_eating_out', label: 'No eating out', emoji: '🍳' },
+  { key: 'no_eating_out', label: 'No eating out / no fast food', emoji: '🍳' },
   { key: 'reading', label: 'Read 10-20 pages', emoji: '📖' },
 ] as const satisfies readonly RuleDef[]
 
@@ -24,23 +26,26 @@ export type RuleKey = 'workout' | 'water' | 'no_alcohol' | 'no_eating_out' | 're
 
 export const RULE_KEYS = RULES.map((r) => r.key) as RuleKey[]
 
-/** A day only "counts" if every rule below is checked true. */
-export function isDayComplete(entry: Record<RuleKey, boolean>): boolean {
-  return RULE_KEYS.every((key) => entry[key] === true)
+/**
+ * A day only "counts" if every rule below is checked true - except the eating-out rule,
+ * which is optional on weekends (eat out/have fast food freely without breaking the day).
+ */
+export function isDayComplete(entry: Record<RuleKey, boolean>, entryDate: string): boolean {
+  return RULE_KEYS.every((key) => {
+    if (key === 'no_eating_out' && isWeekend(entryDate)) return true
+    return entry[key] === true
+  })
 }
 
 /**
  * True if nothing was actually logged for this day - every rule is unchecked, no partial
- * water, no notes. A row can still exist in the DB in this state (e.g. someone tapped a
- * rule by accident and immediately undid it) - those rows shouldn't count as "logged".
+ * water. A row can still exist in the DB in this state (e.g. someone tapped a rule by
+ * accident and immediately undid it) - those rows shouldn't count as "logged".
  */
-export function isEntryEmpty(
-  entry: Record<RuleKey, boolean> & { notes?: string | null; water_litres?: number },
-): boolean {
+export function isEntryEmpty(entry: Record<RuleKey, boolean> & { water_litres?: number }): boolean {
   const hasAnyRuleChecked = RULE_KEYS.some((key) => entry[key] === true)
   const hasPartialWater = (entry.water_litres ?? 0) > 0
-  const hasNotes = !!entry.notes && entry.notes.trim() !== ''
-  return !hasAnyRuleChecked && !hasPartialWater && !hasNotes
+  return !hasAnyRuleChecked && !hasPartialWater
 }
 
 /** How many days back you're allowed to backfill a missed entry. No forward logging. */
@@ -76,7 +81,10 @@ export function pointsForDay(streakLength: number): number {
 
 // --- "Money saved" stat -----------------------------------------------------
 
-/** Kronor "saved" for each day no_eating_out is checked true. */
+/**
+ * Kronor "saved" for each day the eating-out rule is satisfied via "No eating out"
+ * specifically - not "No fast food" (that one's about food choices, not spending).
+ */
 export const MONEY_SAVED_PER_DAY = 150
 
 /** Currency suffix shown after the amount, e.g. "150 kr". */

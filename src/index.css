@@ -179,8 +179,7 @@ textarea {
   color: var(--text-h);
 }
 
-.login-form input,
-.notes-field textarea {
+.login-form input {
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -368,18 +367,64 @@ textarea {
   color: var(--accent);
 }
 
-.notes-field {
+.eating-out-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-h);
-  margin-bottom: 12px;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
 }
 
-.notes-field textarea {
-  resize: vertical;
+.eating-out-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eating-out-header .checklist-label {
+  flex: 1;
+}
+
+.optional-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.eating-out-options {
+  display: flex;
+  gap: 8px;
+}
+
+.eating-out-pill {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.eating-out-pill.checked {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.eating-out-pill.partial {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
 }
 
 .saving-indicator {

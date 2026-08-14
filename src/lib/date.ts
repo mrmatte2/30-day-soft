@@ -13,6 +13,13 @@ export function formatDisplayDate(isoDate: string): string {
   return date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
 }
 
+/** True if the given 'YYYY-MM-DD' date falls on a Saturday or Sunday. */
+export function isWeekend(isoDate: string): boolean {
+  const [y, m, d] = isoDate.split('-').map(Number)
+  const day = new Date(y, m - 1, d).getDay()
+  return day === 0 || day === 6
+}
+
 /** Shifts a 'YYYY-MM-DD' date by a number of local calendar days (negative = earlier). */
 export function shiftDateISO(isoDate: string, deltaDays: number): string {
   const [y, m, d] = isoDate.split('-').map(Number)

@@ -11,7 +11,7 @@ import {
   WATER_TARGET_LITRES,
 } from '../lib/challengeConfig'
 import { computeStreakStats, type DailyEntry } from '../lib/streaks'
-import { todayLocalISO, formatDisplayDate, shiftDateISO } from '../lib/date'
+import { todayLocalISO, formatDisplayDate, shiftDateISO, isWeekend } from '../lib/date'
 import {
   getPushPermissionState,
   hasActivePushSubscription,
@@ -20,6 +20,7 @@ import {
 } from '../lib/push'
 
 type RuleState = Record<RuleKey, boolean>
+type NonSpecialRuleKey = Exclude<RuleKey, 'water' | 'no_eating_out'>
 
 const emptyRuleState: RuleState = {
   workout: false,
@@ -40,10 +41,11 @@ export default function TodayPage() {
   const isToday = dayOffset === 0
   const canGoPrev = dayOffset > -MAX_BACKFILL_DAYS
   const canGoNext = dayOffset < 0
+  const weekendExempt = isWeekend(selectedDate)
 
   const [rules, setRules] = useState<RuleState>(emptyRuleState)
   const [waterLitres, setWaterLitres] = useState(0)
-  const [notes, setNotes] = useState('')
+  const [fastFoodOnly, setFastFoodOnly] = useState(false)
   const [allEntries, setAllEntries] = useState<DailyEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -84,7 +86,7 @@ export default function TodayPage() {
       setLoading(true)
       const { data, error } = await supabase
         .from('daily_entries')
-        .select('entry_date, workout, water, water_litres, no_alcohol, no_eating_out, reading, notes')
+        .select('entry_date, workout, water, water_litres, no_alcohol, no_eating_out, fast_food_only, reading')
         .eq('user_id', profile!.id)
         .order('entry_date', { ascending: true })
 
@@ -112,11 +114,11 @@ export default function TodayPage() {
         reading: entry.reading,
       })
       setWaterLitres(entry.water_litres ?? (entry.water ? WATER_TARGET_LITRES : 0))
-      setNotes(entry.notes ?? '')
+      setFastFoodOnly(entry.fast_food_only ?? false)
     } else {
       setRules(emptyRuleState)
       setWaterLitres(0)
-      setNotes('')
+      setFastFoodOnly(false)
     }
   }, [selectedDate, allEntries])
 
@@ -124,14 +126,14 @@ export default function TodayPage() {
     const withoutSelected = allEntries.filter((e) => e.entry_date !== selectedDate)
     return computeStreakStats([
       ...withoutSelected,
-      { entry_date: selectedDate, notes, water_litres: waterLitres, ...rules },
+      { entry_date: selectedDate, water_litres: waterLitres, fast_food_only: fastFoodOnly, ...rules },
     ])
-  }, [allEntries, selectedDate, rules, waterLitres, notes])
+  }, [allEntries, selectedDate, rules, waterLitres, fastFoodOnly])
 
-  const dayComplete = isDayComplete(rules)
+  const dayComplete = isDayComplete(rules, selectedDate)
   const projectedPoints = dayComplete ? pointsForDay(stats.currentStreak) : 0
 
-  async function persist(nextRules: RuleState, nextWaterLitres: number, nextNotes: string) {
+  async function persist(nextRules: RuleState, nextWaterLitres: number, nextFastFoodOnly: boolean) {
     if (!profile) return
     setSaving(true)
     setError(null)
@@ -141,7 +143,7 @@ export default function TodayPage() {
         entry_date: selectedDate,
         ...nextRules,
         water_litres: nextWaterLitres,
-        notes: nextNotes,
+        fast_food_only: nextFastFoodOnly,
       },
       { onConflict: 'user_id,entry_date' },
     )
@@ -152,17 +154,22 @@ export default function TodayPage() {
         const rest = prev.filter((e) => e.entry_date !== selectedDate)
         return [
           ...rest,
-          { entry_date: selectedDate, notes: nextNotes, water_litres: nextWaterLitres, ...nextRules },
+          {
+            entry_date: selectedDate,
+            water_litres: nextWaterLitres,
+            fast_food_only: nextFastFoodOnly,
+            ...nextRules,
+          },
         ]
       })
     }
     setSaving(false)
   }
 
-  function toggleRule(key: Exclude<RuleKey, 'water'>) {
+  function toggleRule(key: NonSpecialRuleKey) {
     const next = { ...rules, [key]: !rules[key] }
     setRules(next)
-    persist(next, waterLitres, notes)
+    persist(next, waterLitres, fastFoodOnly)
   }
 
   function cycleWater() {
@@ -170,11 +177,27 @@ export default function TodayPage() {
     const nextRules = { ...rules, water: next >= WATER_TARGET_LITRES }
     setWaterLitres(next)
     setRules(nextRules)
-    persist(nextRules, next, notes)
+    persist(nextRules, next, fastFoodOnly)
   }
 
-  function handleNotesBlur() {
-    persist(rules, waterLitres, notes)
+  function selectEatingOut(option: 'no_eating_out' | 'fast_food') {
+    const isNoEatingOutActive = rules.no_eating_out && !fastFoodOnly
+    const isFastFoodActive = rules.no_eating_out && fastFoodOnly
+
+    let nextNoEatingOut: boolean
+    let nextFastFoodOnly: boolean
+    if (option === 'no_eating_out') {
+      nextNoEatingOut = !isNoEatingOutActive
+      nextFastFoodOnly = false
+    } else {
+      nextNoEatingOut = !isFastFoodActive
+      nextFastFoodOnly = nextNoEatingOut
+    }
+
+    const nextRules = { ...rules, no_eating_out: nextNoEatingOut }
+    setRules(nextRules)
+    setFastFoodOnly(nextFastFoodOnly)
+    persist(nextRules, waterLitres, nextFastFoodOnly)
   }
 
   if (loading) return <div className="centered-message">Loading…</div>
@@ -227,53 +250,79 @@ export default function TodayPage() {
       </div>
 
       <ul className="checklist">
-        {RULES.map((rule) =>
-          rule.key === 'water' ? (
-            <li key="water">
-              <button
-                type="button"
-                className={
-                  waterLitres >= WATER_TARGET_LITRES
-                    ? 'checklist-item checked'
-                    : waterLitres > 0
-                      ? 'checklist-item partial'
-                      : 'checklist-item'
-                }
-                onClick={cycleWater}
-              >
-                <span className="checklist-emoji">{waterRule.emoji}</span>
-                <span className="checklist-label">{waterRule.label}</span>
-                <span className="checklist-water-count">
-                  {waterLitres}/{WATER_TARGET_LITRES}
-                </span>
-              </button>
-            </li>
-          ) : (
+        {RULES.map((rule) => {
+          if (rule.key === 'water') {
+            return (
+              <li key="water">
+                <button
+                  type="button"
+                  className={
+                    waterLitres >= WATER_TARGET_LITRES
+                      ? 'checklist-item checked'
+                      : waterLitres > 0
+                        ? 'checklist-item partial'
+                        : 'checklist-item'
+                  }
+                  onClick={cycleWater}
+                >
+                  <span className="checklist-emoji">{waterRule.emoji}</span>
+                  <span className="checklist-label">{waterRule.label}</span>
+                  <span className="checklist-water-count">
+                    {waterLitres}/{WATER_TARGET_LITRES}
+                  </span>
+                </button>
+              </li>
+            )
+          }
+
+          if (rule.key === 'no_eating_out') {
+            const noEatingOutActive = rules.no_eating_out && !fastFoodOnly
+            const fastFoodActive = rules.no_eating_out && fastFoodOnly
+            return (
+              <li key="no_eating_out">
+                <div className="eating-out-row">
+                  <div className="eating-out-header">
+                    <span className="checklist-emoji">{rule.emoji}</span>
+                    <span className="checklist-label">Eating out</span>
+                    {weekendExempt && <span className="optional-badge">Optional today</span>}
+                  </div>
+                  <div className="eating-out-options">
+                    <button
+                      type="button"
+                      className={noEatingOutActive ? 'eating-out-pill checked' : 'eating-out-pill'}
+                      onClick={() => selectEatingOut('no_eating_out')}
+                    >
+                      No eating out 💰
+                    </button>
+                    <button
+                      type="button"
+                      className={fastFoodActive ? 'eating-out-pill partial' : 'eating-out-pill'}
+                      onClick={() => selectEatingOut('fast_food')}
+                    >
+                      No fast food
+                    </button>
+                  </div>
+                </div>
+              </li>
+            )
+          }
+
+          const key = rule.key as NonSpecialRuleKey
+          return (
             <li key={rule.key}>
               <button
                 type="button"
-                className={rules[rule.key] ? 'checklist-item checked' : 'checklist-item'}
-                onClick={() => toggleRule(rule.key as Exclude<RuleKey, 'water'>)}
+                className={rules[key] ? 'checklist-item checked' : 'checklist-item'}
+                onClick={() => toggleRule(key)}
               >
                 <span className="checklist-emoji">{rule.emoji}</span>
                 <span className="checklist-label">{rule.label}</span>
-                <span className="checklist-check">{rules[rule.key] ? '✓' : ''}</span>
+                <span className="checklist-check">{rules[key] ? '✓' : ''}</span>
               </button>
             </li>
-          ),
-        )}
+          )
+        })}
       </ul>
-
-      <label className="notes-field">
-        Notes
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          onBlur={handleNotesBlur}
-          rows={3}
-          placeholder="Optional"
-        />
-      </label>
 
       {saving && <p className="saving-indicator">Saving…</p>}
       {error && <p className="form-error">{error}</p>}
